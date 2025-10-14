@@ -1,0 +1,14 @@
+fastapi
+uvicorn
+python-multipart
+crewai
+crewai-tools
+python-dotenv
+google-cloud-firestore
+pypdf
+python-docx
+groq
+langchain-groq
+tavily-python
+pytest
+pytest-mock
