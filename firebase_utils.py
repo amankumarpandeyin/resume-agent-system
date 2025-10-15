@@ -1,58 +1,30 @@
-# firebase_utils.py - All our Firebase interactions are bundled up in here.
-# Keeps the main code clean and lets us talk to the database without clutter.
+# firebase_utils.py
 import uuid
 from google.cloud import firestore
-from google.api_core.exceptions import NotFound
 
-# Spin up the Firestore client.
-# It's smart enough to find the GOOGLE_APPLICATION_CREDENTIALS env var on its own.
 db = firestore.Client()
 
 def create_new_conversation():
-    """Kicks off a new chat session in Firestore and gives us a unique ID."""
     conversation_id = str(uuid.uuid4())
     conversation_ref = db.collection('conversations').document(conversation_id)
-    conversation_ref.set({
-        'history': [],
-        'created_at': firestore.SERVER_TIMESTAMP
-    })
+    conversation_ref.set({'history': [], 'created_at': firestore.SERVER_TIMESTAMP})
     return conversation_id
 
 def get_conversation_history(conversation_id: str):
-    """Grabs the chat history for a given session. No history, no problem - just returns an empty list."""
-    try:
-        conversation_ref = db.collection('conversations').document(conversation_id)
-        doc = conversation_ref.get()
-        if doc.exists:
-            return doc.to_dict().get('history', [])
-        else:
-            return []
-    except NotFound:
-        return []
+    doc = db.collection('conversations').document(conversation_id).get()
+    return doc.to_dict().get('history', []) if doc.exists else []
 
 def update_conversation_history(conversation_id: str, new_entry: dict):
-    """Appends a new message to the chat log. Keeps the conversation flowing."""
-    conversation_ref = db.collection('conversations').document(conversation_id)
-    conversation_ref.update({
+    db.collection('conversations').document(conversation_id).update({
         'history': firestore.ArrayUnion([new_entry])
     })
 
 def save_resume_version(conversation_id: str, original_text: str, modified_text: str = None, agent_reasoning: str = ""):
-    """
-    Saves a snapshot of the resume. This is our version control.
-    We find the latest version number and just increment it. Git-like, but simpler.
-    """
-    # Find the latest version for this convo to figure out the new version number.
     query = db.collection('resumes').where('conversationId', '==', conversation_id).order_by('version', direction=firestore.Query.DESCENDING).limit(1)
     docs = list(query.stream())
+    new_version = docs[0].to_dict().get('version', 0) + 1 if docs else 1
     
-    new_version = 1
-    if docs:
-        latest_version = docs[0].to_dict().get('version', 0)
-        new_version = latest_version + 1
-
-    resume_doc_ref = db.collection('resumes').document()
-    resume_doc_ref.set({
+    db.collection('resumes').document().set({
         'conversationId': conversation_id,
         'version': new_version,
         'original_text': original_text,
@@ -63,11 +35,28 @@ def save_resume_version(conversation_id: str, original_text: str, modified_text:
     return new_version
 
 def get_latest_resume(conversation_id: str):
-    """Fetches the most recent version of the resume for a given chat. Always gets the latest and greatest."""
     query = db.collection('resumes').where('conversationId', '==', conversation_id).order_by('version', direction=firestore.Query.DESCENDING).limit(1)
     docs = list(query.stream())
+    return docs[0].to_dict() if docs else None
 
-    if docs:
-        return docs[0].to_dict()
-    else:
-        return None
+# --- NEW FUNCTIONS TO FIX ERROR 1 ---
+def get_all_resume_versions(conversation_id: str):
+    query = db.collection('resumes').where('conversationId', '==', conversation_id).order_by('version')
+    return [doc.to_dict() for doc in query.stream()]
+
+def revert_to_version(conversation_id: str, version: int):
+    query = db.collection('resumes').where('conversationId', '==', conversation_id).where('version', '==', version).limit(1)
+    docs = list(query.stream())
+    if not docs: return None
+
+    version_to_revert = docs[0].to_dict()
+    first_version_query = db.collection('resumes').where('conversationId', '==', conversation_id).order_by('version').limit(1)
+    original_text = list(first_version_query.stream())[0].to_dict().get('original_text', '')
+
+    save_resume_version(
+        conversation_id=conversation_id,
+        original_text=original_text,
+        modified_text=version_to_revert.get('modified_text'),
+        agent_reasoning=f"Reverted to version {version}."
+    )
+    return get_latest_resume(conversation_id)
