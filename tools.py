@@ -1,6 +1,18 @@
-# tools.py - The AI's toolkit. This is where we keep the gadgets our agents use to do their jobs.
-from crewai_tools import TavilySearchTool
+import os
+from langchain_tavily import TavilySearch
+from crewai.tools import tool 
+from dotenv import load_dotenv
 
-# This is our web search tool. It's how our agents can browse the internet.
-# It's powered by Tavily and uses the TAVILY_API_KEY from our .env file.
-web_search_tool = TavilySearchTool()
+load_dotenv()
+
+# Instantiate the original LangChain tool
+tavily_search_instance = TavilySearch(k=3)
+
+# Use the @tool decorator to create a CrewAI-compatible tool.
+# The function name 'web_search_tool' becomes the tool itself.
+@tool("Tavily Web Search")
+def web_search_tool(query: str) -> str:
+    """Performs a web search using the Tavily API to find up-to-date information."""
+    return tavily_search_instance.invoke({"query": query})
+
+#bye
