@@ -12,3 +12,4 @@ langchain-groq
 tavily-python
 pytest
 pytest-mock
+langchain-community
