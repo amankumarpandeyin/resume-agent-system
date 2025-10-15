@@ -1,120 +1,83 @@
 from crewai import Task
 import json
 
+
 def create_routing_task(agent, user_query, history):
-    """
-    This task is for the router agent. It's the first step in any user interaction.
-    The goal is to look at the user's message and the chat history, and then decide
-    which agent or sequence of agents should take it from here. The output is a clean
-    JSON list of agent names. No fluff.
-    """
-    # We're just formatting the history into a clean string for the LLM...
-    history_str = '\n'.join([f"{msg.get('role', 'unknown')}: {msg.get('content', '')}" for msg in history]) if history else "No history yet."
-    
+    """Creates the task for the router agent to classify the user's query."""
+    history_str = '\n'.join([f"{msg.get('role', 'unknown')}: {msg.get('content', '')}" for msg in history])
     return Task(
         description=(
-            f"Analyze the user's query and the conversation history to determine the right agent sequence. "
-            "Here are the available agents:\n"
-            "- 'company_researcher': For digging into a specific company.\n"
-            "- 'job_matcher': When a job description is involved.\n"
-            "- 'section_enhancer': For tweaking a specific part of the resume.\n"
-            "- 'translation': For language and localization stuff.\n"
-            "- 'general_chitchat': For anything that's not about resumes.\n\n"
+            f"Analyze the user's query and conversation history to determine the right agent sequence. "
+            "Available agents: 'company_researcher', 'job_matcher', 'section_enhancer', 'translation', 'general_chitchat'.\n\n"
             f"USER QUERY: {user_query}\n"
             f"CONVERSATION HISTORY: {history_str}\n\n"
             "Your output MUST be a valid JSON array of agent keywords in the correct order. "
-            "For example: [\"company_researcher\", \"job_matcher\"]. For a single agent, just one in the list: [\"job_matcher\"]."
+            "Example: [\"company_researcher\", \"job_matcher\"]. For a single agent: [\"job_matcher\"]."
         ),
         agent=agent,
-        expected_output="A JSON array of agent keywords, like [\"job_matcher\"].",
-        context={"query": user_query, "history": history}
+        expected_output="A JSON array of agent keywords, like [\"job_matcher\"]."
     )
 
-def create_company_research_task(agent, resume_text, user_query):
-    """
-    This task sends the Company Researcher agent on a mission to become an expert
-    on a company and then tailor the resume to match. It's all about alignment.
-    """
+# --- MISSING FUNCTION TO ADD ---
+def create_task(description: str, agent, expected_output: str):
+    """A generic function to create any task."""
+    return Task(description=description, agent=agent, expected_output=expected_output)
+def create_company_research_task(agent, query, resume):
     return Task(
-        description=(
-            "The user wants to optimize their resume for a specific company. Here's the plan:\n"
-            "1. Pinpoint the company name from the user's query: '{query}'.\n"
-            "2. Hit the web and research the company's culture, values, and tech stack.\n"
-            "3. Read the user's current resume: \n---RESUME---\n{resume}\n---\n"
-            "4. Rewrite the resume. Weave in the keywords, tone, and values you found. Focus on the summary, experience, and skills.\n"
-            "5. Your final output has two parts:\n"
-            "   - First, explain what you changed and why it makes the resume a better fit for the company.\n"
-            "   - Second, the full, updated resume, wrapped in '###UPDATED_RESUME###' tags."
-        ),
+        description=f"""
+        A user wants to optimize their resume for a specific company based on this query: '{query}'.
+
+        Your task is to:
+        1. Use your web search tool to thoroughly research the company mentioned in the query.
+           Focus on its culture, core values, mission, recent news, and the technologies it uses.
+        2. Analyze the provided resume below and compare it against your research findings.
+        3. Based on your analysis, provide a brief summary of your findings and strategic advice
+           on how the user should align their resume. Do not rewrite the resume yourself.
+
+        USER'S RESUME:
+        ---
+        {resume}
+        ---
+        """,
         agent=agent,
-        expected_output="An explanation of the changes, followed by the full updated resume inside '###UPDATED_RESUME###' tags.",
-        context={"resume": resume_text, "query": user_query}
+        expected_output="A summary of your research findings and 3-5 actionable recommendations for resume alignment."
     )
 
 def create_job_matching_task(agent, resume_text, user_query):
-    """
-    This is the task for the Job Matcher agent. It's a head-to-head comparison
-    between the resume and a job description, with the goal of making the resume
-    an undeniable match. This one is data-driven, with a match score and skill gaps.
-    """
     return Task(
         description=(
-            "The user wants to tailor their resume to a job description. Let's get it done:\n"
-            "1. Deep-dive into the job description from the user's query: '{query}'. Understand the core requirements.\n"
-            "2. Analyze the current resume: \n---RESUME---\n{resume}\n---\n"
-            "3. Compare the two. Find the gaps and the opportunities.\n"
-            "4. Rewrite the resume to be a perfect match. Reorder points, inject keywords, and sharpen the summary.\n"
-            "5. Calculate a match score (0-100%) and explain how you got it.\n"
-            "6. List 3-5 specific skill gaps and suggest how to fix them.\n"
-            "7. Your final output has three parts, in this order:\n"
-            "   - First, your analysis: the changes, the score, and the gaps.\n"
-            "   - Second, a bulleted list of skill gaps, wrapped in '###SKILL_GAPS###' tags.\n"
-            "   - Third, the full, updated resume, wrapped in '###UPDATED_RESUME###' tags."
+            f"A user wants to tailor their resume to a job description provided in their query: '{user_query}'.\n"
+            f"1. Analyze the job description and the resume:\n---RESUME---\n{resume_text}\n---\n"
+            f"2. Rewrite the resume to be a perfect match.\n"
+            f"3. Calculate a match score (0-100%) and list 3-5 skill gaps.\n"
+            f"4. Your output must contain your analysis, then a list of skill gaps inside '###SKILL_GAPS###' tags, "
+            f"and finally the full updated resume inside '###UPDATED_RESUME###' tags."
         ),
         agent=agent,
-        expected_output="Explanation with score, then the skill gaps list in '###SKILL_GAPS###', then the updated resume in '###UPDATED_RESUME###'.",
-        context={"resume": resume_text, "query": user_query}
+        expected_output="An explanation with a score, a list of skill gaps, and the full updated resume."
     )
-
 def create_section_enhancement_task(agent, resume_text, user_query):
-    """
-    This task is for the Section Enhancer agent. It's a focused mission to
-    level up a specific part of the resume using proven writing techniques.
-    """
     return Task(
         description=(
-            "The user wants to punch up a specific section of their resume. Here's the mission:\n"
-            "1. Figure out which section they're talking about from their query: '{query}'.\n"
-            "2. Analyze that section in the context of the full resume: \n---RESUME---\n{resume}\n---\n"
-            "3. Rewrite only that section. Use action verbs, add metrics (even if you have to suggest placeholders like '[Increased by X%]'), and apply the STAR method.\n"
-            "4. Put the full resume back together with the new and improved section.\n"
-            "5. Your final output has two parts:\n"
-            "   - First, explain the improvements you made and why they're more effective.\n"
-            "   - Second, the full, updated resume, wrapped in '###UPDATED_RESUME###' tags."
+            f"A user wants to improve a specific resume section based on their query: '{user_query}'.\n"
+            f"1. Identify the target section.\n"
+            f"2. Analyze the section within the full resume:\n---RESUME---\n{resume_text}\n---\n"
+            f"3. Rewrite only the target section using action verbs, metrics, and the STAR method.\n"
+            f"4. Explain the improvements, then provide the full updated resume in '###UPDATED_RESUME###' tags."
         ),
         agent=agent,
-        expected_output="An explanation of the changes, followed by the full updated resume inside '###UPDATED_RESUME###' tags.",
-        context={"resume": resume_text, "query": user_query}
+        expected_output="An explanation of changes, followed by the full updated resume."
     )
 
 def create_translation_task(agent, resume_text, user_query):
-    """
-    This task is for the Translation agent. It's not just about swapping words;
-    it's about adapting the entire resume for a new cultural and professional context.
-    """
     return Task(
         description=(
-            "The user needs their resume translated and localized. Here's the game plan:\n"
-            "1. Identify the target language and country from the user's query: '{query}'.\n"
-            "2. Use your search tool to learn about the local hiring scene. What are the resume conventions in that market?\n"
-            "3. Translate the whole resume. Keep it professional.\n"
-            "4. Adapt the content and format based on your research. This could mean changing the tone, reordering sections, or adding local keywords.\n"
-            "5. Here's the original resume for context: \n---RESUME---\n{resume}\n---\n"
-            "6. Your final output has two parts:\n"
-            "   - First, explain your translation and localization choices. Why did you make them?\n"
-            "   - Second, the full, updated resume in the target language, wrapped in '###UPDATED_RESUME###' tags."
+            f"A user wants to translate their resume based on the query: '{user_query}'.\n"
+            f"1. Identify the target language and country.\n"
+            f"2. Research local hiring conventions for that country.\n"
+            f"3. Translate and adapt the resume:\n---RESUME---\n{resume_text}\n---\n"
+            f"4. Explain your localization choices, then provide the full translated resume in '###UPDATED_RESUME###' tags."
         ),
         agent=agent,
-        expected_output="An explanation of the changes, followed by the full updated resume inside '###UPDATED_RESUME###' tags.",
-        context={"resume": resume_text, "query": user_query}
+        expected_output="An explanation of localization choices, followed by the full updated resume."
     )
