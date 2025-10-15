@@ -20,9 +20,13 @@ FIREBASE_PROJECT_ID = os.getenv("FIREBASE_PROJECT_ID")
 
 # --- LLM Config ---
 # We're rolling with Groq 'cause it's fast as hell.
-# 'llama3-8b-8192' is the sweet spot between smart and speedy.
-LLM_MODEL_NAME = 'llama3-8b-8192'
+# IMPORTANT: Groq models need the 'groq/' prefix for LiteLLM to recognize them
+# Using Llama 3.1 8B Instant - blazing fast at 560 tokens/sec
+LLM_MODEL_NAME = 'groq/llama-3.1-8b-instant'
 
 # --- Agent Config ---
 # The router agent gets its own model config, 'cause it needs to be extra quick.
-ROUTER_MODEL_NAME = 'llama3-8b-8192'
+ROUTER_MODEL_NAME = 'groq/llama-3.1-8b-instant'
+
+# Synthesizer uses same model for now
+SYNTHESIZER_MODEL_NAME = 'groq/llama-3.1-8b-instant'
