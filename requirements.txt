@@ -13,3 +13,4 @@ tavily-python
 pytest
 pytest-mock
 langchain-community
+langchain-tavily
