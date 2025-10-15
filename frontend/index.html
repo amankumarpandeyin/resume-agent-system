@@ -1,0 +1,1011 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>AI Resume Optimizer - Careerflow.ai</title>
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700&display=swap" rel="stylesheet">
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/html2pdf.js/0.10.1/html2pdf.bundle.min.js"></script>
+    <style>
+        * { box-sizing: border-box; margin: 0; padding: 0; }
+        
+        body {
+            font-family: 'Inter', -apple-system, BlinkMacSystemFont, sans-serif;
+            line-height: 1.6;
+            color: #1f2937;
+            background: #ffffff;
+        }
+
+        .hidden { display: none !important; }
+        
+        /* Navigation */
+        nav {
+            border-bottom: 1px solid #e5e7eb;
+            padding: 1rem 1.5rem;
+            background: white;
+            position: sticky;
+            top: 0;
+            z-index: 100;
+        }
+        
+        nav .container {
+            max-width: 1400px;
+            margin: 0 auto;
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+        }
+        
+        .logo { font-size: 1.25rem; font-weight: 600; color: #111827; }
+        
+        .nav-actions {
+            display: flex;
+            gap: 1rem;
+            align-items: center;
+        }
+        
+        .btn {
+            padding: 0.5rem 1rem;
+            border-radius: 0.5rem;
+            font-size: 0.875rem;
+            font-weight: 500;
+            cursor: pointer;
+            border: none;
+            transition: all 0.2s;
+        }
+        
+        .btn-primary {
+            background: #111827;
+            color: white;
+        }
+        
+        .btn-primary:hover { background: #374151; }
+        
+        .btn-secondary {
+            background: #f3f4f6;
+            color: #374151;
+        }
+        
+        .btn-secondary:hover { background: #e5e7eb; }
+        
+        /* Landing Page */
+        .landing {
+            min-height: 90vh;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            padding: 2rem;
+            background: linear-gradient(135deg, #f9fafb 0%, #ffffff 100%);
+        }
+        
+        .landing-content {
+            max-width: 600px;
+            text-align: center;
+        }
+        
+        .landing h1 {
+            font-size: 3rem;
+            font-weight: 700;
+            margin-bottom: 1.5rem;
+            color: #111827;
+        }
+        
+        .landing p {
+            font-size: 1.125rem;
+            color: #6b7280;
+            margin-bottom: 2rem;
+            line-height: 1.8;
+        }
+        
+        /* Modal */
+        dialog {
+            border: none;
+            border-radius: 0.75rem;
+            padding: 2rem;
+            max-width: 500px;
+            box-shadow: 0 20px 25px -5px rgba(0,0,0,0.1);
+        }
+        
+        dialog::backdrop {
+            background: rgba(0, 0, 0, 0.4);
+            backdrop-filter: blur(4px);
+        }
+        
+        .modal-header {
+            font-size: 1.25rem;
+            font-weight: 600;
+            margin-bottom: 1rem;
+        }
+        
+        .modal-body {
+            margin-bottom: 1.5rem;
+        }
+        
+        .file-input {
+            width: 100%;
+            padding: 0.75rem;
+            border: 2px dashed #d1d5db;
+            border-radius: 0.5rem;
+            cursor: pointer;
+            transition: all 0.2s;
+        }
+        
+        .file-input:hover {
+            border-color: #9ca3af;
+            background: #f9fafb;
+        }
+        
+        .progress-bar {
+            width: 100%;
+            height: 0.5rem;
+            background: #e5e7eb;
+            border-radius: 0.25rem;
+            overflow: hidden;
+            margin-top: 1rem;
+        }
+        
+        .progress-fill {
+            height: 100%;
+            background: #111827;
+            transition: width 0.3s;
+        }
+        
+        /* Chat Layout */
+        .chat-container {
+            display: flex;
+            height: calc(100vh - 4rem);
+            max-width: 1400px;
+            margin: 0 auto;
+        }
+        
+        /* Sidebar */
+        .sidebar {
+            width: 320px;
+            border-right: 1px solid #e5e7eb;
+            background: #f9fafb;
+            display: flex;
+            flex-direction: column;
+        }
+        
+        .sidebar-header {
+            padding: 1.5rem;
+            border-bottom: 1px solid #e5e7eb;
+        }
+        
+        .tabs {
+            display: flex;
+            gap: 1rem;
+            border-bottom: 2px solid #e5e7eb;
+            margin-bottom: 1rem;
+        }
+        
+        .tab {
+            padding: 0.5rem 0;
+            font-size: 0.875rem;
+            font-weight: 500;
+            color: #6b7280;
+            cursor: pointer;
+            border-bottom: 2px solid transparent;
+            transition: all 0.2s;
+        }
+        
+        .tab.active {
+            color: #111827;
+            border-bottom-color: #111827;
+        }
+        
+        .sidebar-content {
+            flex: 1;
+            overflow-y: auto;
+            padding: 1rem;
+        }
+        
+        /* Version Card */
+        .version-card {
+            background: white;
+            border: 1px solid #e5e7eb;
+            border-radius: 0.5rem;
+            padding: 1rem;
+            margin-bottom: 0.75rem;
+            transition: all 0.2s;
+        }
+        
+        .version-card:hover {
+            border-color: #d1d5db;
+            box-shadow: 0 2px 4px rgba(0,0,0,0.05);
+        }
+        
+        .version-header {
+            display: flex;
+            justify-content: space-between;
+            align-items: start;
+            margin-bottom: 0.5rem;
+        }
+        
+        .version-title {
+            font-weight: 600;
+            font-size: 0.875rem;
+        }
+        
+        .version-time {
+            font-size: 0.75rem;
+            color: #9ca3af;
+        }
+        
+        .version-reason {
+            font-size: 0.75rem;
+            color: #6b7280;
+            margin-top: 0.5rem;
+            line-height: 1.4;
+        }
+        
+        .btn-revert {
+            padding: 0.25rem 0.75rem;
+            font-size: 0.75rem;
+            background: #fef3c7;
+            color: #92400e;
+            border: 1px solid #fde68a;
+            border-radius: 0.375rem;
+        }
+        
+        .btn-revert:hover {
+            background: #fde68a;
+        }
+        
+        /* Main Content */
+        .main-content {
+            flex: 1;
+            display: flex;
+            flex-direction: column;
+        }
+        
+        /* Resume Preview */
+        .resume-preview {
+            border-bottom: 1px solid #e5e7eb;
+            padding: 1.5rem;
+            background: white;
+        }
+        
+        .preview-header {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            margin-bottom: 1rem;
+        }
+        
+        .preview-title {
+            font-weight: 600;
+            font-size: 1rem;
+        }
+        
+        .preview-actions {
+            display: flex;
+            gap: 0.75rem;
+        }
+        
+        .icon-btn {
+            padding: 0.5rem;
+            background: #f3f4f6;
+            border: none;
+            border-radius: 0.375rem;
+            cursor: pointer;
+            font-size: 0.875rem;
+            color: #6b7280;
+        }
+        
+        .icon-btn:hover {
+            background: #e5e7eb;
+            color: #111827;
+        }
+        
+        .resume-textarea {
+            width: 100%;
+            height: 200px;
+            padding: 1rem;
+            border: 1px solid #e5e7eb;
+            border-radius: 0.5rem;
+            font-family: 'Monaco', 'Menlo', monospace;
+            font-size: 0.875rem;
+            resize: vertical;
+            line-height: 1.6;
+        }
+        
+        /* Chat Area */
+        .chat-area {
+            flex: 1;
+            overflow-y: auto;
+            padding: 1.5rem;
+            background: #f9fafb;
+        }
+        
+        .message {
+            margin-bottom: 1.5rem;
+            display: flex;
+            flex-direction: column;
+        }
+        
+        .message.user {
+            align-items: flex-end;
+        }
+        
+        .message-bubble {
+            max-width: 70%;
+            padding: 0.875rem 1.125rem;
+            border-radius: 1rem;
+            font-size: 0.9375rem;
+            line-height: 1.5;
+        }
+        
+        .message.user .message-bubble {
+            background: #111827;
+            color: white;
+            border-bottom-right-radius: 0.25rem;
+        }
+        
+        .message.assistant .message-bubble {
+            background: white;
+            color: #1f2937;
+            border: 1px solid #e5e7eb;
+            border-bottom-left-radius: 0.25rem;
+        }
+        
+        .message-meta {
+            font-size: 0.75rem;
+            color: #9ca3af;
+            margin-top: 0.5rem;
+            max-width: 70%;
+        }
+        
+        .match-score {
+            display: inline-flex;
+            align-items: center;
+            gap: 0.5rem;
+            padding: 0.5rem 0.75rem;
+            background: #d1fae5;
+            color: #065f46;
+            border-radius: 0.5rem;
+            font-weight: 500;
+            margin-top: 0.5rem;
+        }
+        
+        .skill-gaps {
+            margin-top: 0.75rem;
+            padding: 0.75rem;
+            background: #fef3c7;
+            border-radius: 0.5rem;
+        }
+        
+        .skill-gaps-title {
+            font-weight: 600;
+            font-size: 0.875rem;
+            color: #92400e;
+            margin-bottom: 0.5rem;
+        }
+        
+        .skill-gaps ul {
+            list-style: none;
+            font-size: 0.875rem;
+            color: #78350f;
+        }
+        
+        .skill-gaps li {
+            padding: 0.25rem 0;
+        }
+        
+        .skill-gaps li::before {
+            content: "•";
+            margin-right: 0.5rem;
+        }
+        
+        .accordion {
+            margin-top: 0.75rem;
+        }
+        
+        .accordion-trigger {
+            padding: 0.5rem 0.75rem;
+            background: #f3f4f6;
+            border: none;
+            border-radius: 0.375rem;
+            cursor: pointer;
+            font-size: 0.8125rem;
+            color: #6b7280;
+            width: 100%;
+            text-align: left;
+            font-weight: 500;
+        }
+        
+        .accordion-trigger:hover {
+            background: #e5e7eb;
+            color: #374151;
+        }
+        
+        .accordion-content {
+            display: none;
+            margin-top: 0.5rem;
+            padding: 0.875rem;
+            background: #f9fafb;
+            border: 1px solid #e5e7eb;
+            border-radius: 0.5rem;
+            font-size: 0.8125rem;
+            line-height: 1.6;
+            max-height: 300px;
+            overflow-y: auto;
+        }
+        
+        .accordion-content.active {
+            display: block;
+        }
+        
+        .accordion-content pre {
+            white-space: pre-wrap;
+            word-break: break-word;
+            font-family: 'Monaco', monospace;
+            font-size: 0.75rem;
+        }
+        
+        /* Input Area */
+        .input-area {
+            border-top: 1px solid #e5e7eb;
+            padding: 1.5rem;
+            background: white;
+        }
+        
+        .input-container {
+            display: flex;
+            gap: 0.75rem;
+            align-items: flex-end;
+        }
+        
+        .message-input {
+            flex: 1;
+            padding: 0.875rem 1rem;
+            border: 2px solid #e5e7eb;
+            border-radius: 0.75rem;
+            font-size: 0.9375rem;
+            resize: none;
+            max-height: 120px;
+            font-family: inherit;
+        }
+        
+        .message-input:focus {
+            outline: none;
+            border-color: #111827;
+        }
+        
+        .btn-send {
+            padding: 0.875rem 1.5rem;
+            background: #111827;
+            color: white;
+            border: none;
+            border-radius: 0.75rem;
+            font-weight: 600;
+            cursor: pointer;
+        }
+        
+        .btn-send:hover:not(:disabled) {
+            background: #374151;
+        }
+        
+        .btn-send:disabled {
+            opacity: 0.5;
+            cursor: not-allowed;
+        }
+        
+        .typing-indicator {
+            display: flex;
+            align-items: center;
+            gap: 0.5rem;
+            color: #9ca3af;
+            font-size: 0.875rem;
+            margin-top: 0.75rem;
+        }
+        
+        .typing-dots {
+            display: flex;
+            gap: 0.25rem;
+        }
+        
+        .typing-dot {
+            width: 6px;
+            height: 6px;
+            background: #9ca3af;
+            border-radius: 50%;
+            animation: typing 1.4s infinite;
+        }
+        
+        .typing-dot:nth-child(2) { animation-delay: 0.2s; }
+        .typing-dot:nth-child(3) { animation-delay: 0.4s; }
+        
+        @keyframes typing {
+            0%, 60%, 100% { opacity: 0.3; }
+            30% { opacity: 1; }
+        }
+        
+        /* Toast */
+        .toast {
+            position: fixed;
+            top: 2rem;
+            right: 2rem;
+            padding: 1rem 1.5rem;
+            background: white;
+            border-radius: 0.5rem;
+            box-shadow: 0 10px 15px -3px rgba(0,0,0,0.1);
+            display: flex;
+            align-items: center;
+            gap: 0.75rem;
+            z-index: 1000;
+            animation: slideIn 0.3s ease-out;
+        }
+        
+        @keyframes slideIn {
+            from {
+                transform: translateX(100%);
+                opacity: 0;
+            }
+            to {
+                transform: translateX(0);
+                opacity: 1;
+            }
+        }
+        
+        .toast.success { border-left: 4px solid #10b981; }
+        .toast.error { border-left: 4px solid #ef4444; }
+        .toast.info { border-left: 4px solid #3b82f6; }
+        
+        /* Responsive */
+        @media (max-width: 1024px) {
+            .chat-container { flex-direction: column; }
+            .sidebar { width: 100%; border-right: none; border-bottom: 1px solid #e5e7eb; }
+            .message-bubble { max-width: 85%; }
+        }
+        
+        @media (max-width: 640px) {
+            .landing h1 { font-size: 2rem; }
+            .landing p { font-size: 1rem; }
+            .sidebar { display: none; }
+        }
+    </style>
+</head>
+<body>
+    <nav>
+        <div class="container">
+            <div class="logo">Careerflow.ai Resume Optimizer</div>
+            <div class="nav-actions">
+                <button id="newChatBtn" class="btn btn-secondary hidden">New Chat</button>
+                <button id="themeToggle" class="icon-btn" title="Toggle theme">🌙</button>
+            </div>
+        </div>
+    </nav>
+
+    <!-- Landing Page -->
+    <div id="landing" class="landing">
+        <div class="landing-content">
+            <h1>AI-Powered Resume Optimizer</h1>
+            <p>Upload your resume and let our AI agents help you tailor it for specific companies, job descriptions, languages, or enhance specific sections with intelligent suggestions.</p>
+            <button id="uploadBtn" class="btn btn-primary">Upload Resume</button>
+        </div>
+    </div>
+
+    <!-- Upload Modal -->
+    <dialog id="uploadModal">
+        <div class="modal-header">Upload Your Resume</div>
+        <div class="modal-body">
+            <p style="color: #6b7280; font-size: 0.875rem; margin-bottom: 1rem;">
+                Select a PDF or DOCX file (max 5MB)
+            </p>
+            <input type="file" id="fileInput" accept=".pdf,.docx" class="file-input">
+            <div id="uploadProgress" class="hidden">
+                <div class="progress-bar">
+                    <div id="progressBar" class="progress-fill" style="width: 0%"></div>
+                </div>
+            </div>
+        </div>
+        <div style="display: flex; justify-content: flex-end; gap: 0.75rem;">
+            <button id="cancelUpload" class="btn btn-secondary">Cancel</button>
+            <button id="submitUpload" class="btn btn-primary">Upload</button>
+        </div>
+    </dialog>
+
+    <!-- Chat Page -->
+    <div id="chatPage" class="hidden">
+        <div class="chat-container">
+            <!-- Sidebar -->
+            <aside class="sidebar">
+                <div class="sidebar-header">
+                    <div class="tabs">
+                        <div class="tab active" data-tab="history">History</div>
+                        <div class="tab" data-tab="versions">Versions</div>
+                    </div>
+                </div>
+                <div class="sidebar-content">
+                    <div id="historyTab"></div>
+                    <div id="versionsTab" class="hidden"></div>
+                </div>
+            </aside>
+
+            <!-- Main Content -->
+            <main class="main-content">
+                <!-- Resume Preview -->
+                <div class="resume-preview">
+                    <div class="preview-header">
+                        <div class="preview-title">Current Resume</div>
+                        <div class="preview-actions">
+                            <button id="downloadPdf" class="icon-btn" title="Download PDF">📄</button>
+                            <button id="refreshResume" class="icon-btn" title="Refresh">🔄</button>
+                        </div>
+                    </div>
+                    <textarea id="resumeText" class="resume-textarea" placeholder="Resume will appear here..."></textarea>
+                </div>
+
+                <!-- Chat Area -->
+                <div id="chatArea" class="chat-area"></div>
+
+                <!-- Input Area -->
+                <div class="input-area">
+                    <div class="input-container">
+                        <textarea id="messageInput" class="message-input" placeholder="Ask me to optimize for a company, match a job description, translate to another language, or enhance a specific section..." rows="1"></textarea>
+                        <button id="sendBtn" class="btn-send" disabled>Send</button>
+                    </div>
+                    <div id="typingIndicator" class="typing-indicator hidden">
+                        <span>AI is thinking</span>
+                        <div class="typing-dots">
+                            <div class="typing-dot"></div>
+                            <div class="typing-dot"></div>
+                            <div class="typing-dot"></div>
+                        </div>
+                    </div>
+                </div>
+            </main>
+        </div>
+    </div>
+
+    <script>
+        const API_URL = 'http://localhost:8000';
+        let conversationId = null;
+        let messages = [];
+        let currentResume = '';
+        let versions = [];
+
+        // DOM Elements
+        const landing = document.getElementById('landing');
+        const chatPage = document.getElementById('chatPage');
+        const uploadModal = document.getElementById('uploadModal');
+        const fileInput = document.getElementById('fileInput');
+        const uploadBtn = document.getElementById('uploadBtn');
+        const submitUpload = document.getElementById('submitUpload');
+        const cancelUpload = document.getElementById('cancelUpload');
+        const uploadProgress = document.getElementById('uploadProgress');
+        const progressBar = document.getElementById('progressBar');
+        const historyTab = document.getElementById('historyTab');
+        const versionsTab = document.getElementById('versionsTab');
+        const resumeText = document.getElementById('resumeText');
+        const chatArea = document.getElementById('chatArea');
+        const messageInput = document.getElementById('messageInput');
+        const sendBtn = document.getElementById('sendBtn');
+        const typingIndicator = document.getElementById('typingIndicator');
+        const newChatBtn = document.getElementById('newChatBtn');
+        const downloadPdf = document.getElementById('downloadPdf');
+        const refreshResume = document.getElementById('refreshResume');
+
+        // Initialize
+        document.addEventListener('DOMContentLoaded', () => {
+            setupEventListeners();
+        });
+
+        function setupEventListeners() {
+            uploadBtn.addEventListener('click', () => uploadModal.showModal());
+            cancelUpload.addEventListener('click', () => uploadModal.close());
+            submitUpload.addEventListener('click', handleUpload);
+            sendBtn.addEventListener('click', sendMessage);
+            
+            messageInput.addEventListener('input', () => {
+                sendBtn.disabled = !messageInput.value.trim() || !conversationId;
+                autoResize(messageInput);
+            });
+            
+            messageInput.addEventListener('keypress', (e) => {
+                if (e.key === 'Enter' && !e.shiftKey) {
+                    e.preventDefault();
+                    sendMessage();
+                }
+            });
+            
+            newChatBtn.addEventListener('click', () => {
+                if (confirm('Start a new conversation? Current chat will be lost.')) {
+                    resetApp();
+                }
+            });
+            
+            downloadPdf.addEventListener('click', downloadAsPdf);
+            refreshResume.addEventListener('click', loadVersions);
+            
+            document.querySelectorAll('.tab').forEach(tab => {
+                tab.addEventListener('click', (e) => {
+                    document.querySelectorAll('.tab').forEach(t => t.classList.remove('active'));
+                    e.target.classList.add('active');
+                    
+                    if (e.target.dataset.tab === 'versions') {
+                        historyTab.classList.add('hidden');
+                        versionsTab.classList.remove('hidden');
+                    } else {
+                        historyTab.classList.remove('hidden');
+                        versionsTab.classList.add('hidden');
+                    }
+                });
+            });
+        }
+
+        async function handleUpload() {
+            const file = fileInput.files[0];
+            if (!file) {
+                showToast('Please select a file', 'error');
+                return;
+            }
+
+            const formData = new FormData();
+            formData.append('file', file);
+
+            uploadProgress.classList.remove('hidden');
+            submitUpload.disabled = true;
+
+            try {
+                const res = await fetch(`${API_URL}/upload`, {
+                    method: 'POST',
+                    body: formData
+                });
+                
+                if (!res.ok) throw new Error(await res.text());
+
+                const data = await res.json();
+                conversationId = data.conversation_id;
+                currentResume = data.resume_text;
+                resumeText.value = currentResume;
+
+                uploadModal.close();
+                showChatPage();
+                loadVersions();
+                showToast('Resume uploaded successfully!', 'success');
+            } catch (err) {
+                showToast(err.message, 'error');
+            } finally {
+                uploadProgress.classList.add('hidden');
+                submitUpload.disabled = false;
+                progressBar.style.width = '0%';
+                fileInput.value = '';
+            }
+        }
+
+        async function sendMessage() {
+            const message = messageInput.value.trim();
+            if (!message || !conversationId) return;
+
+            messages.push({ role: 'user', content: message });
+            renderChat();
+            messageInput.value = '';
+            sendBtn.disabled = true;
+            typingIndicator.classList.remove('hidden');
+
+            try {
+                const res = await fetch(`${API_URL}/chat`, {
+                    method: 'POST',
+                    headers: { 'Content-Type': 'application/json' },
+                    body: JSON.stringify({ conversation_id: conversationId, message })
+                });
+                
+                if (!res.ok) throw new Error(await res.text());
+
+                const data = await res.json();
+                messages.push({
+                    role: 'assistant',
+                    content: data.agent_response,
+                    reasoning: data.reasoning,
+                    updated_resume: data.updated_resume,
+                    match_score: data.match_score,
+                    skill_gaps: data.skill_gaps
+                });
+                
+                currentResume = data.updated_resume;
+                resumeText.value = currentResume;
+
+                renderChat();
+                loadVersions();
+                
+                if (data.match_score) {
+                    showToast(`Match Score: ${data.match_score}%`, 'success');
+                }
+            } catch (err) {
+                showToast(err.message, 'error');
+                messages.pop();
+                renderChat();
+            } finally {
+                typingIndicator.classList.add('hidden');
+                sendBtn.disabled = false;
+            }
+        }
+
+        function renderChat() {
+            chatArea.innerHTML = messages.map(msg => createMessageBubble(msg)).join('');
+            chatArea.scrollTop = chatArea.scrollHeight;
+        }
+
+        function createMessageBubble(msg) {
+            if (msg.role === 'user') {
+                return `
+                    <div class="message user">
+                        <div class="message-bubble">${escapeHtml(msg.content)}</div>
+                    </div>
+                `;
+            }
+
+            let extras = '';
+            
+            if (msg.match_score !== undefined) {
+                extras += `<div class="match-score">✅ Match Score: ${msg.match_score}%</div>`;
+            }
+            
+            if (msg.skill_gaps && msg.skill_gaps.length) {
+                const gapsList = msg.skill_gaps.map(g => `<li>${escapeHtml(g)}</li>`).join('');
+                extras += `
+                    <div class="skill-gaps">
+                        <div class="skill-gaps-title">Skill Gaps to Address:</div>
+                        <ul>${gapsList}</ul>
+                    </div>
+                `;
+            }
+
+            const accordionId = `acc-${Date.now()}`;
+            extras += `
+                <div class="accordion">
+                    <button class="accordion-trigger" onclick="toggleAccordion('${accordionId}-reasoning')">
+                        View Agent Reasoning
+                    </button>
+                    <div id="${accordionId}-reasoning" class="accordion-content">
+                        <pre>${escapeHtml(msg.reasoning || 'No additional reasoning provided.')}</pre>
+                    </div>
+                </div>
+            `;
+
+            return `
+                <div class="message assistant">
+                    <div class="message-bubble">
+                        ${escapeHtml(msg.content)}
+                        ${extras}
+                    </div>
+                </div>
+            `;
+        }
+
+        async function loadVersions() {
+            if (!conversationId) return;
+            
+            try {
+                const res = await fetch(`${API_URL}/versions/${conversationId}`);
+                if (res.ok) {
+                    const data = await res.json();
+                    versions = data.versions || [];
+                    renderVersions();
+                }
+            } catch (err) {
+                console.error('Failed to load versions:', err);
+            }
+        }
+
+        function renderVersions() {
+            if (!versions.length) {
+                versionsTab.innerHTML = '<p style="text-align: center; color: #9ca3af; padding: 2rem;">No versions yet</p>';
+                return;
+            }
+
+            versionsTab.innerHTML = versions.map(v => {
+                const time = v.timestamp ? new Date(v.timestamp.seconds * 1000).toLocaleString() : 'N/A';
+                const reason = v.agent_reasoning.substring(0, 100) + (v.agent_reasoning.length > 100 ? '...' : '');
+                
+                return `
+                    <div class="version-card">
+                        <div class="version-header">
+                            <div>
+                                <div class="version-title">Version ${v.version}</div>
+                                <div class="version-time">${time}</div>
+                            </div>
+                            <button class="btn-revert" onclick="revertVersion(${v.version})">Revert</button>
+                        </div>
+                        <div class="version-reason">${escapeHtml(reason)}</div>
+                    </div>
+                `;
+            }).join('');
+        }
+
+        async function revertVersion(version) {
+            if (!confirm(`Revert to version ${version}?`)) return;
+            
+            try {
+                const res = await fetch(`${API_URL}/revert/${conversationId}/${version}`, { method: 'POST' });
+                if (!res.ok) throw new Error(await res.text());
+                
+                const data = await res.json();
+                currentResume = data.resume;
+                resumeText.value = currentResume;
+                loadVersions();
+                showToast(data.message, 'success');
+            } catch (err) {
+                showToast(err.message, 'error');
+            }
+        }
+
+        function downloadAsPdf() {
+            if (!currentResume) {
+                showToast('No resume to download', 'error');
+                return;
+            }
+            
+            const element = document.createElement('div');
+            element.innerHTML = `<pre style="font-family: 'Arial', sans-serif; white-space: pre-wrap; padding: 1in; font-size: 11pt; line-height: 1.6;">${currentResume}</pre>`;
+            
+            const opt = {
+                margin: 0.5,
+                filename: 'optimized-resume.pdf',
+                image: { type: 'jpeg', quality: 0.98 },
+                html2canvas: { scale: 2 },
+                jsPDF: { unit: 'in', format: 'letter', orientation: 'portrait' }
+            };
+            
+            html2pdf().set(opt).from(element).save();
+            showToast('Downloading PDF...', 'info');
+        }
+
+        function toggleAccordion(id) {
+            const element = document.getElementById(id);
+            if (element) {
+                element.classList.toggle('active');
+            }
+        }
+
+        function showChatPage() {
+            landing.classList.add('hidden');
+            chatPage.classList.remove('hidden');
+            newChatBtn.classList.remove('hidden');
+            sendBtn.disabled = false;
+        }
+
+        function resetApp() {
+            conversationId = null;
+            messages = [];
+            currentResume = '';
+            versions = [];
+            chatPage.classList.add('hidden');
+            landing.classList.remove('hidden');
+            newChatBtn.classList.add('hidden');
+            chatArea.innerHTML = '';
+            resumeText.value = '';
+            versionsTab.innerHTML = '';
+            historyTab.innerHTML = '';
+        }
+
+        function showToast(message, type = 'info') {
+            const toast = document.createElement('div');
+            toast.className = `toast ${type}`;
+            toast.innerHTML = `
+                <span>${type === 'success' ? '✅' : type === 'error' ? '❌' : 'ℹ️'}</span>
+                <span>${escapeHtml(message)}</span>
+            `;
+            document.body.appendChild(toast);
+            
+            setTimeout(() => {
+                toast.style.animation = 'slideIn 0.3s ease-out reverse';
+                setTimeout(() => toast.remove(), 300);
+            }, 3000);
+        }
+
+        function escapeHtml(text) {
+            const div = document.createElement('div');
+            div.textContent = text;
+            return div.innerHTML;
+        }
+
+        function autoResize(textarea) {
+            textarea.style.height = 'auto';
+            textarea.style.height = Math.min(textarea.scrollHeight, 120) + 'px';
+        }
+    </script>
+</body>
+</html>
